@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beyond Time - Galería</title>
+
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Inter, Arial, sans-serif}
+
+    @font-face {
+      font-family:'JaneAust';
+      src: url('recursos/JaneAust.ttf') format('truetype');
+    }
+
+    body{
+      background: url("recursos/fondo.jpg") center/cover no-repeat;
+      min-height:100vh;
+      overflow:hidden;
+      position:relative;
+      color:white;
+    }
+
+    .overlay{position:absolute; inset:0; background:rgba(0,0,0,0.0);}
+
+    /* INTRO */
+    .intro{
+      position:absolute;
+      top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      text-align:center;
+      max-width:900px;
+      padding:20px;
+      animation:fadeIn 1s ease;
+      z-index:2;
+    }
+    .title{
+      font-family:'JaneAust';
+      font-size:70px;
+      color:#d8b080;
+      white-space:nowrap;
+      margin-bottom:20px;
+    }
+    .intro p{font-size:20px; line-height:1.5; margin-bottom:22px; color:#fff;}
+    .btn{
+      background:#d8b080; border:none; padding:14px 32px; border-radius:8px; color:white;
+      font-size:18px; cursor:pointer; transition:0.25s; margin-top:10px;
+    }
+    .btn:hover{opacity:.9}
+
+    @keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+    @keyframes slideUpSmooth{0%{opacity:1;margin-top:0;}100%{opacity:0;margin-top:-400px;}}
+
+    /* GALERÍA */
+    .galeria{
+      position:absolute; inset:0;
+      background-image:url("recursos/fondo2.jpg");
+      background-size:cover;
+      background-position:center;
+      padding:40px;
+      overflow:hidden;
+      display:none;
+    }
+
+    .back{
+      position:absolute;
+      top:30px; left:30px;
+      background:#9e1065;
+      color:white;
+      padding:16px 28px;
+      border-radius:28px;
+      border:none;
+      font-size:20px;
+      font-weight:800;
+      cursor:pointer;
+      z-index:20;
+    }
+    .back:hover{opacity:.9;}
+
+    /* CARRUSEL */
+    .carousel-wrapper{
+      position:absolute;
+      top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      width:80%;
+      max-width:800px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:20px;
+    }
+
+    .arrow{
+      font-size:60px;
+      color:#d8b080;
+      cursor:pointer;
+      user-select:none;
+      transition:0.2s;
+    }
+    .arrow:hover{opacity:0.7;}
+    .arrow.hidden{opacity:0; pointer-events:none;}
+
+    .image-box{
+      width:100%;
+      max-width:650px;
+      text-align:center;
+    }
+
+    /* 📌 CORRECCIÓN: Evita imágenes verticales gigantes */
+    .image-box img{
+      width:100%;
+      max-height:60vh; /* evita pantalla completa */
+      object-fit:contain;
+     
+      cursor:pointer;
+    }
+
+    .descargar-mini{
+      background:#d8b080;
+      color:white;
+      padding:10px 20px;
+      border-radius:20px;
+      text-decoration:none;
+      font-size:16px;
+      display:inline-block;
+      margin-top:14px;
+      font-weight:600;
+    }
+
+    /* MODAL */
+    #modal{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      background:rgba(0,0,0,0.92);
+      z-index:9999;
+    }
+
+    #modal-img{
+      max-width:92%;
+      max-height:88%;
+      border-radius:10px;
+      box-shadow:0 18px 60px rgba(0,0,0,.6);
+    }
+
+    .close{
+      position:absolute; top:18px; right:26px;
+      font-size:46px; color:#fff; cursor:pointer;
+    }
+
+    .download-icon{
+      position:absolute;
+      right:28px; bottom:26px;
+      width:52px; height:52px;
+      border-radius:50%;
+      background:#d8b080;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+    }
+    .download-icon img{width:26px;}
+  </style>
+</head>
+
+<body>
+
+<div class="overlay"></div>
+
+<!-- INTRO -->
+<div id="intro" class="intro">
+  <h1 class="title">Beyond Time</h1>
+  <p>Muchas gracias por acompañarnos en Beyond Time.<br>Fue un verdadero placer compartir este momento con ustedes y vivir juntos una experiencia inolvidable.</p>
+  <button class="btn" onclick="mostrarGaleria()">Galería</button>
+</div>
+
+<!-- GALERÍA -->
+<div id="galeria" class="galeria">
+
+  <button class="back" onclick="volver()">← Regresar</button>
+
+  <div class="carousel-wrapper">
+
+    <div id="flechaIzq" class="arrow" onclick="mover(-1)">❮</div>
+
+    <div class="image-box">
+      <img id="imgCarrusel" src="" onclick="abrirModal(indexActual)">
+      <br>
+      <a id="btnDescargar" class="descargar-mini" href="" download>Descargar</a>
+    </div>
+
+    <div id="flechaDer" class="arrow" onclick="mover(1)">❯</div>
+
+  </div>
+
+</div>
+
+<!-- MODAL -->
+<div id="modal">
+  <span class="close" onclick="cerrarModal()">×</span>
+  <img id="modal-img">
+  <a id="downloadIconLink" class="download-icon" download>
+    <img src="recursos/quico.png">
+  </a>
+</div>
+
+<script>
+/* ========== 70 IMÁGENES ========== */
+const imagenes = [];
+for(let i=1; i<=67; i++){
+  imagenes.push(`imagenes/imagen${i}.jpg`);
+}
+
+let indexActual = 0;
+
+/* INTRO → GALERÍA */
+function mostrarGaleria(){
+  document.getElementById("intro").style.animation = "slideUpSmooth 1s forwards";
+  setTimeout(()=>{
+    document.getElementById("intro").style.display = "none";
+    document.getElementById("galeria").style.display = "block";
+    actualizarCarrusel();
+  },900);
+}
+
+function volver(){
+  document.getElementById("galeria").style.display = "none";
+  const intro = document.getElementById("intro");
+  intro.style.display = "block";
+  intro.style.animation = "fadeIn 1s";
+}
+
+/* CARRUSEL */
+function actualizarCarrusel(){
+  const img = document.getElementById("imgCarrusel");
+  const dl = document.getElementById("btnDescargar");
+
+  img.src = imagenes[indexActual];
+  dl.href = imagenes[indexActual];
+  dl.setAttribute("download", `imagen${indexActual+1}.jpg`);
+
+  document.getElementById("flechaIzq").classList.toggle("hidden", indexActual === 0);
+  document.getElementById("flechaDer").classList.toggle("hidden", indexActual === imagenes.length-1);
+}
+
+function mover(dir){
+  indexActual += dir;
+  if(indexActual < 0) indexActual = 0;
+  if(indexActual > imagenes.length-1) indexActual = imagenes.length-1;
+  actualizarCarrusel();
+}
+
+/* MODAL */
+function abrirModal(i){
+  indexActual = i;
+
+  const modal = document.getElementById("modal");
+  const img = document.getElementById("modal-img");
+  const dl = document.getElementById("downloadIconLink");
+
+  img.src = imagenes[i];
+  dl.href = imagenes[i];
+  dl.setAttribute("download", `imagen${i+1}.jpg`);
+
+  modal.style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+
+function cerrarModal(){
+  document.getElementById("modal").style.display = "none";
+  document.body.style.overflow = "";
+}
+
+/* Navegación con teclado en modal */
+document.addEventListener("keydown", e=>{
+  if(document.getElementById("modal").style.display==="flex"){
+    if(e.key==="ArrowRight") navegar(1);
+    if(e.key==="ArrowLeft") navegar(-1);
+    if(e.key==="Escape") cerrarModal();
+  }
+});
+
+function navegar(dir){
+  let nuevo = indexActual + dir;
+  if(nuevo < 0 || nuevo >= imagenes.length) return;
+  indexActual = nuevo;
+  abrirModal(indexActual);
+}
+
+/* cerrar modal tocando afuera */
+document.getElementById("modal").addEventListener("click", e=>{
+  if(e.target.id === "modal") cerrarModal();
+});
+</script>
+
+</body>
+</html>
+
+
+
+
+
