@@ -57,14 +57,14 @@
       background-image:url("recursos/fondo2.jpg");
       background-size:cover;
       background-position:center;
-      padding:40px;
-      overflow:hidden;
+      padding:30px;
+      overflow-y:auto;
       display:none;
     }
 
     .back{
-      position:absolute;
-      top:30px; left:30px;
+      position:sticky;
+      top:20px;
       background:#9e1065;
       color:white;
       padding:16px 28px;
@@ -73,58 +73,36 @@
       font-size:20px;
       font-weight:800;
       cursor:pointer;
-      z-index:20;
+      z-index:30;
+      margin-bottom:20px;
     }
     .back:hover{opacity:.9;}
 
-    /* CARRUSEL */
-    .carousel-wrapper{
-      position:absolute;
-      top:50%; left:50%;
-      transform:translate(-50%,-50%);
-      width:80%;
-      max-width:800px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:20px;
-    }
-
-    .arrow{
-      font-size:60px;
-      color:#d8b080;
-      cursor:pointer;
-      user-select:none;
-      transition:0.2s;
-    }
-    .arrow:hover{opacity:0.7;}
-    .arrow.hidden{opacity:0; pointer-events:none;}
-
-    .image-box{
+    /* MASONRY 3 COLUMNAS SIEMPRE */
+    .masonry{
+      column-count:3 !important;
+      column-gap:16px;
       width:100%;
-      max-width:650px;
-      text-align:center;
+      padding-bottom:40px;
     }
 
-    /* 📌 CORRECCIÓN: Evita imágenes verticales gigantes */
-    .image-box img{
+    .masonry img{
       width:100%;
-      max-height:60vh; /* evita pantalla completa */
-      object-fit:contain;
-     
+      margin-bottom:16px;
+      border-radius:10px;
       cursor:pointer;
+      break-inside:avoid;
+      transition:0.14s;
     }
 
-    .descargar-mini{
-      background:#d8b080;
-      color:white;
-      padding:10px 20px;
-      border-radius:20px;
-      text-decoration:none;
-      font-size:16px;
-      display:inline-block;
-      margin-top:14px;
-      font-weight:600;
+    .masonry img:hover{
+      transform:scale(1.02);
+      filter:brightness(1.12);
+    }
+
+    /* IMPORTANTE: NO reducir a 1 columna en móvil */
+    @media(max-width:600px){
+      .masonry{column-count:3 !important;}
     }
 
     /* MODAL */
@@ -177,19 +155,8 @@
 
   <button class="back" onclick="volver()">← Regresar</button>
 
-  <div class="carousel-wrapper">
-
-    <div id="flechaIzq" class="arrow" onclick="mover(-1)">❮</div>
-
-    <div class="image-box">
-      <img id="imgCarrusel" src="" onclick="abrirModal(indexActual)">
-      <br>
-      <a id="btnDescargar" class="descargar-mini" href="" download>Descargar</a>
-    </div>
-
-    <div id="flechaDer" class="arrow" onclick="mover(1)">❯</div>
-
-  </div>
+  <!-- GRID TIPO iPhone -->
+  <div id="masonry" class="masonry"></div>
 
 </div>
 
@@ -203,13 +170,11 @@
 </div>
 
 <script>
-/* ========== 70 IMÁGENES ========== */
+/* LISTA REAL DE IMÁGENES: imagen1.jpg → imagen67.jpg */
 const imagenes = [];
 for(let i=1; i<=67; i++){
   imagenes.push(`imagenes/imagen${i}.jpg`);
 }
-
-let indexActual = 0;
 
 /* INTRO → GALERÍA */
 function mostrarGaleria(){
@@ -217,7 +182,7 @@ function mostrarGaleria(){
   setTimeout(()=>{
     document.getElementById("intro").style.display = "none";
     document.getElementById("galeria").style.display = "block";
-    actualizarCarrusel();
+    cargarMasonry();
   },900);
 }
 
@@ -228,30 +193,33 @@ function volver(){
   intro.style.animation = "fadeIn 1s";
 }
 
-/* CARRUSEL */
-function actualizarCarrusel(){
-  const img = document.getElementById("imgCarrusel");
-  const dl = document.getElementById("btnDescargar");
+/* GENERAR MASONRY */
+function cargarMasonry(){
+  const cont = document.getElementById("masonry");
+  cont.innerHTML = "";
 
-  img.src = imagenes[indexActual];
-  dl.href = imagenes[indexActual];
-  dl.setAttribute("download", `imagen${indexActual+1}.jpg`);
+  imagenes.forEach((src, i)=>{
+    const img = document.createElement("img");
+    img.src = src;
+    img.onclick = ()=>abrirModal(i);
+    cont.appendChild(img);
+  });
+  
+  const finalText = document.createElement("div");
+  finalText.style.textAling= "center";
+  finalText.style.marginTop= "40px";
+  finalText.style.fontSize= "20px";
+  finalText.style.color="#d8b080";
+  finalText.style.lineHeight="1.6";
+  finalText.innerText= "Beyond Time fue una noche para recordar. Una noche para reflexionar sobre los retos, oportunidades y logros que nos deja este año. Una noche para agradecer y celebrar un año más de contar con su confianza. Miramos hacia el futuro con entusiasmo, listos para nuevas oportunidades de seguir creciendo juntos. ¡Les deseamos felices fiestas y un inicio de año lleno de éxitos!"
 
-  document.getElementById("flechaIzq").classList.toggle("hidden", indexActual === 0);
-  document.getElementById("flechaDer").classList.toggle("hidden", indexActual === imagenes.length-1);
-}
-
-function mover(dir){
-  indexActual += dir;
-  if(indexActual < 0) indexActual = 0;
-  if(indexActual > imagenes.length-1) indexActual = imagenes.length-1;
-  actualizarCarrusel();
 }
 
 /* MODAL */
+let indexActual = 0;
+
 function abrirModal(i){
   indexActual = i;
-
   const modal = document.getElementById("modal");
   const img = document.getElementById("modal-img");
   const dl = document.getElementById("downloadIconLink");
@@ -269,56 +237,26 @@ function cerrarModal(){
   document.body.style.overflow = "";
 }
 
-/* Navegación con teclado en modal */
+/* TECLAS */
 document.addEventListener("keydown", e=>{
-  if(document.getElementById("modal").style.display==="flex"){
-    if(e.key==="ArrowRight") navegar(1);
-    if(e.key==="ArrowLeft") navegar(-1);
+  const modal = document.getElementById("modal");
+  if(modal.style.display==="flex"){
     if(e.key==="Escape") cerrarModal();
+    if(e.key==="ArrowRight") moverModal(1);
+    if(e.key==="ArrowLeft") moverModal(-1);
   }
 });
 
-function navegar(dir){
+function moverModal(dir){
   let nuevo = indexActual + dir;
   if(nuevo < 0 || nuevo >= imagenes.length) return;
-  indexActual = nuevo;
-  abrirModal(indexActual);
+  abrirModal(nuevo);
 }
 
-/* cerrar modal tocando afuera */
+/* CERRAR TOCANDO AFUERA */
 document.getElementById("modal").addEventListener("click", e=>{
   if(e.target.id === "modal") cerrarModal();
 });
-  /* ============================
-   SWIPE EN MODAL (MÓVILES)
-   ============================ */
-let touchStartX = 0;
-let touchEndX = 0;
-
-const modal = document.getElementById("modal");
-
-modal.addEventListener("touchstart", (e) => {
-  touchStartX = e.changedTouches[0].screenX;
-});
-
-modal.addEventListener("touchend", (e) => {
-  touchEndX = e.changedTouches[0].screenX;
-  manejarSwipe();
-});
-
-function manejarSwipe() {
-  const distancia = touchEndX - touchStartX;
-  const umbral = 50; // píxeles necesarios para considerar que fue un swipe
-
-  if (distancia > umbral) {
-    // ✔ swipe a la derecha (ver foto anterior)
-    navegar(-1);
-  } else if (distancia < -umbral) {
-    // ✔ swipe a la izquierda (ver siguiente foto)
-    navegar(1);
-  }
-}
-
 </script>
 
 </body>
